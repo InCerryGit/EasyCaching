@@ -13,9 +13,9 @@ namespace EasyCaching.FasterKv.Configurations
     {
         /// <summary>
         /// FasterKv index count, Must be power of 2
-        /// For example: 1024(2^10) 2048(2^11) 65536(2^16) 131072(2^17)
-        /// Each index is 64 bits. So this define 131072 keys. Used 1024Kb memory
         /// </summary>
+        /// <para>For example: 1024(2^10) 2048(2^11) 65536(2^16) 131072(2^17)</para>
+        /// <para>Each index is 64 bits. So this define 131072 keys. Used 1024Kb memory</para>
         public long IndexCount { get; set; } = 131072;
 
         /// <summary>

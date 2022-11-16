@@ -162,13 +162,17 @@ namespace EasyCaching.FasterKv
         private async Task BaseSetInternalAsync<T>(ClientSessionWrap sessionWarp, string cacheKey, T cacheValue,
             CancellationToken cancellationToken)
         {
-            _  = await sessionWarp.Session.UpsertAsync(GetSpanByte(cacheKey), GetSpanByte(cacheValue), token: cancellationToken).ConfigureAwait(false);
+            _ = await (await sessionWarp.Session.UpsertAsync(GetSpanByte(cacheKey),
+                    GetSpanByte(cacheValue), token: cancellationToken)
+                .ConfigureAwait(false)).CompleteAsync(cancellationToken);
         }
 
 
         private async Task<CacheValue<T>> BaseGetInternalAsync<T>(ClientSessionWrap session, string cacheKey, CancellationToken cancellationToken)
         {
-            var result = (await session.Session.ReadAsync(GetSpanByte(cacheKey), token: cancellationToken).ConfigureAwait(false)).Complete();
+            var result = (await session.Session.ReadAsync(GetSpanByte(cacheKey),
+                    token: cancellationToken)
+                .ConfigureAwait(false)).Complete();
             if (result.status.Found)
             {
                 if (_options.EnableLogging)

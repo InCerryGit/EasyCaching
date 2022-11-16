@@ -255,7 +255,7 @@ namespace EasyCaching.FasterKv
         private CacheValue<T> BaseGetInternal<T>(string cacheKey, ClientSessionWrap session)
         {
             var context = new StoreContext();
-            var result = session.Session.Read(GetSpanByte(cacheKey));
+            var result = session.Session.Read(GetSpanByte(cacheKey), context);
             if (result.status.IsPending)
             {
                 session.Session.CompletePending(true);

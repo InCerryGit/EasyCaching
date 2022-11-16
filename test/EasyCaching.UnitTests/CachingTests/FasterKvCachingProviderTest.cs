@@ -3,13 +3,18 @@ using System.Threading.Tasks;
 using EasyCaching.Core;
 using EasyCaching.Core.Configurations;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace EasyCaching.UnitTests.CachingTests;
 
 public class FasterKvCachingProviderTest : BaseCachingProviderTest
 {
-    public FasterKvCachingProviderTest()
+    private readonly ITestOutputHelper _testOutputHelper;
+
+    public FasterKvCachingProviderTest(ITestOutputHelper testOutputHelper)
     {
+        _testOutputHelper = testOutputHelper;
         _defaultTs = TimeSpan.FromSeconds(30);
     }
 
@@ -26,6 +31,40 @@ public class FasterKvCachingProviderTest : BaseCachingProviderTest
         );
         IServiceProvider serviceProvider = services.BuildServiceProvider();
         return serviceProvider.GetService<IEasyCachingProvider>();
+    }
+
+    [Fact]
+    protected void Set_And_Get_Big_DataSet_Should_Succeed()
+    {
+        // set 10w key
+        for (int i = 0; i < 10_0000; i++)
+        {
+            _provider.Set($"Key_{i}", $"Cache_{i}", _defaultTs);
+        }
+
+        for (int i = 0; i < 10_0000; i++)
+        {
+            var value = _provider.Get<string>($"Key_{i}");
+            Assert.True(value.HasValue);
+            Assert.Equal(value.Value, $"Cache_{i}");
+        }
+    }
+
+    [Fact]
+    protected async Task SetAsync_And_GetAsync_Big_DataSet_Should_Succeed()
+    {
+        // set 10w key
+        for (int i = 0; i < 10_0000; i++)
+        {
+            await _provider.SetAsync($"Key_{i}", $"Cache_{i}", _defaultTs);
+        }
+
+        for (int i = 0; i < 10_0000; i++)
+        {
+            var value = await _provider.GetAsync<string>($"Key_{i}");
+            Assert.True(value.HasValue);
+            Assert.Equal(value.Value, $"Cache_{i}");
+        }
     }
 
     protected override Task GetAsync_Parallel_Should_Succeed()
