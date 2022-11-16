@@ -36,6 +36,11 @@ namespace EasyCaching.FasterKv
 
         private readonly ProviderInfo _info;
 
+        ~DefaultFasterKvCachingProvider()
+        {
+            Dispose(false);
+        }
+
         public DefaultFasterKvCachingProvider(
             string name,
             FasterKvCachingOptions options,
@@ -244,21 +249,8 @@ namespace EasyCaching.FasterKv
             return _info;
         }
 
-
-        public void Dispose()
-        {
-            if (_disposed == false)
-            {
-                foreach (var session in _sessionPool)
-                {
-                    session.Dispose();
-                }
-
-                _logDevice?.Dispose();
-                _fasterKv.Dispose();
-                _disposed = true;
-            }
-        }
+        
+        
 
         private CacheValue<T> BaseGetInternal<T>(string cacheKey, ClientSessionWrap session)
         {
@@ -328,8 +320,7 @@ namespace EasyCaching.FasterKv
             return new ClientSessionWrap(session, _sessionPool);
         }
 
-        // Current FasterKv not support sync operates
-
+        // Operations not currently supported by FasterKv
         #region NotSupprotOperate
 
         public override TimeSpan BaseGetExpiration(string cacheKey)
@@ -358,5 +349,29 @@ namespace EasyCaching.FasterKv
         }
 
         #endregion
+
+        private void Dispose(bool _)
+        {
+            if (_disposed)
+                return;
+            
+            foreach (var session in _sessionPool)
+            {
+                session.Dispose();
+            }
+
+            _logDevice?.Dispose();
+            if (_options.CustomStore != _fasterKv)
+            {
+                _fasterKv.Dispose();   
+            }
+            _disposed = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

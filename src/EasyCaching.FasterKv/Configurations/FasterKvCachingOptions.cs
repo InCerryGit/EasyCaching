@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using EasyCaching.Core.Configurations;
 using FASTER.core;
-using Microsoft.Extensions.Logging;
 
 namespace EasyCaching.FasterKv.Configurations
 {
@@ -14,11 +12,11 @@ namespace EasyCaching.FasterKv.Configurations
     public class FasterKvCachingOptions : BaseProviderOptions
     {
         /// <summary>
-        /// FasterKv index count
-        /// Each bucket is 64 bits. So this define 65536 keys.
-        /// Used 4MB memory
+        /// FasterKv index count, Must be power of 2
+        /// For example: 1024(2^10) 2048(2^11) 65536(2^16) 131072(2^17)
+        /// Each index is 64 bits. So this define 131072 keys. Used 1024Kb memory
         /// </summary>
-        public long IndexCount { get; set; } = 65536;
+        public long IndexCount { get; set; } = 131072;
 
         /// <summary>
         /// FasterKv used memory size (default: 16MB)
@@ -43,7 +41,13 @@ namespace EasyCaching.FasterKv.Configurations
         /// <summary>
         /// FasterKv commit logs path
         /// </summary>
-        public string LogPath { get; set; } = Path.Combine(Environment.CurrentDirectory, $"EasyCaching-FasterKv-{Process.GetCurrentProcess().Id}");
+        public string LogPath { get; set; } =
+#if (NET6_0 || NET7_0)
+            Path.Combine(Environment.CurrentDirectory, $"EasyCaching-FasterKv-{Environment.ProcessId}");
+#else
+            Path.Combine(Environment.CurrentDirectory, $"EasyCaching-FasterKv-{System.Diagnostics.Process.GetCurrentProcess().Id}");
+#endif
+            
         
         /// <summary>
         /// Set Custom Store

@@ -124,7 +124,7 @@ namespace EasyCaching.FasterKv
             using var session = GetSession();
             foreach (var kp in values)
             {
-                await BaseSetInternalAsync<T>(session, kp.Key, kp.Value);
+                await BaseSetInternalAsync<T>(session, kp.Key, kp.Value, cancellationToken);
             }
         }
 
@@ -137,7 +137,7 @@ namespace EasyCaching.FasterKv
             EnsureNotDispose();
 
             using var session = GetSession();
-            await BaseSetInternalAsync(session, cacheKey, cacheValue);
+            await BaseSetInternalAsync(session, cacheKey, cacheValue, cancellationToken);
         }
 
         public override async Task<bool> BaseTrySetAsync<T>(string cacheKey, T cacheValue, TimeSpan expiration,
@@ -149,19 +149,20 @@ namespace EasyCaching.FasterKv
             EnsureNotDispose();
 
             using var session = GetSession();
-            var result = await BaseGetAsync<T>(cacheKey);
+            var result = await BaseGetAsync<T>(cacheKey, cancellationToken);
             if (result.HasValue == false)
             {
-                await BaseSetInternalAsync<T>(session, cacheKey, cacheValue);
+                await BaseSetInternalAsync<T>(session, cacheKey, cacheValue, cancellationToken);
                 return true;
             }
             
             return false;
         }
         
-        private async Task BaseSetInternalAsync<T>(ClientSessionWrap sessionWarp, string cacheKey, T cacheValue)
+        private async Task BaseSetInternalAsync<T>(ClientSessionWrap sessionWarp, string cacheKey, T cacheValue,
+            CancellationToken cancellationToken)
         {
-            _  = await sessionWarp.Session.UpsertAsync(GetSpanByte(cacheKey), GetSpanByte(cacheValue)).ConfigureAwait(false);
+            _  = await sessionWarp.Session.UpsertAsync(GetSpanByte(cacheKey), GetSpanByte(cacheValue), token: cancellationToken).ConfigureAwait(false);
         }
 
 
@@ -185,7 +186,7 @@ namespace EasyCaching.FasterKv
             return CacheValue<T>.NoValue;
         }
 
-        // Current FasterKv not support async operates
+        // Operations not currently supported by FasterKv
         #region NotSupprotOperate
         public override Task<IDictionary<string, CacheValue<T>>> BaseGetByPrefixAsync<T>(string prefix,
             CancellationToken cancellationToken = default)
